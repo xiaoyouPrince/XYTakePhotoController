@@ -15,7 +15,7 @@ static NSString *NoCameraAccessAlertMessage = @"To turn on camera access, choose
 #define kScreen_Height [UIScreen mainScreen].bounds.size.height
 #define kScreen_Width [UIScreen mainScreen].bounds.size.width
 
-@interface FFIDCardBackView : UIView
+@interface XYIDCardBackView : UIView
 @property (nonatomic, assign) BOOL showGuoHuiImage;
 - (void)updateWithBackTitle:(NSString *)title;
 @end
@@ -28,7 +28,7 @@ static NSString *NoCameraAccessAlertMessage = @"To turn on camera access, choose
 // iPhone6 Plus/6s Plus/7 Plus 5.5英寸 屏幕宽高：414*736点 屏幕模式：3x 分辨率：1920*1080像素
 #define iPhone6Plusor6sPlusor7Plus ([UIScreen mainScreen].bounds.size.height == 736.0)
 
-@interface FFIDCardBackView () {
+@interface XYIDCardBackView () {
     CAShapeLayer *_IDCardScanningWindowLayer;
     NSTimer *_timer;
     UILabel *_titleLabel;
@@ -36,7 +36,7 @@ static NSString *NoCameraAccessAlertMessage = @"To turn on camera access, choose
 
 @end
 
-@implementation FFIDCardBackView
+@implementation XYIDCardBackView
 - (instancetype)initWithFrame:(CGRect)frame {
     if (self = [super initWithFrame:frame]) {
         self.backgroundColor = [UIColor clearColor];
@@ -162,7 +162,7 @@ static NSString *NoCameraAccessAlertMessage = @"To turn on camera access, choose
 @property (nonatomic, strong) NSMutableArray *flashItemsArray;
 
 /** idcardBackView */
-@property (nonatomic, strong)       FFIDCardBackView * idcardBackView;
+@property (nonatomic, strong)       XYIDCardBackView * idcardBackView;
 
 @end
 
@@ -179,6 +179,12 @@ static XYTakePhotoController *_instance;
         if (handler) {
             handler(NO);
         }
+        UIAlertController *alert = [UIAlertController alertControllerWithTitle:@"" message:@"相机设备不可用" preferredStyle:UIAlertControllerStyleAlert];
+        [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
+            // 取消
+            [self closeCarema];
+        }]];
+        [self presentViewController:alert animated:YES completion:nil];
         return;
     }
     
@@ -188,6 +194,7 @@ static XYTakePhotoController *_instance;
         UIAlertController *alert = [UIAlertController alertControllerWithTitle:NoCameraAccessAlertTitle message:NoCameraAccessAlertMessage preferredStyle:UIAlertControllerStyleAlert];
         [alert addAction:[UIAlertAction actionWithTitle:@"OK" style:UIAlertActionStyleCancel handler:^(UIAlertAction * _Nonnull action) {
             // 取消
+            [self closeCarema];
         }]];
         [alert addAction:[UIAlertAction actionWithTitle:@"Settings" style:UIAlertActionStyleDefault handler:^(UIAlertAction * _Nonnull action) {
             // 去设置
@@ -220,6 +227,7 @@ static XYTakePhotoController *_instance;
                     if (handler) {
                         handler(NO);
                     }
+                    [self closeCarema];
                 });
             }
         }];
@@ -237,6 +245,14 @@ static XYTakePhotoController *_instance;
 {
     return UIModalPresentationFullScreen;
 }
+- (BOOL)shouldAutorotate {
+    return NO;
+}
+
+- (BOOL)prefersStatusBarHidden{
+    return YES;
+}
+
 + (void)presentFromVC:(UIViewController *)fromVC mode:(XYTakePhotoMode)mode resultHandler:(void (^)(NSArray<UIImage *> * _Nonnull, NSString * _Nonnull))reslutHandler
 {
     _instance = [XYTakePhotoController new];
@@ -245,7 +261,9 @@ static XYTakePhotoController *_instance;
     }
     _instance.mode = mode;
     _instance.callBackHandler = reslutHandler;
-    [fromVC presentViewController:_instance animated:YES completion:nil];
+    [fromVC presentViewController:_instance animated:YES completion:^{
+        [_instance buildUI];
+    }];
     
 }
 
@@ -265,7 +283,6 @@ static XYTakePhotoController *_instance;
     if (self.navigationController) {
         @throw [NSException exceptionWithName:@"用法错误" reason:@"此类不支持导航控制器推出,请使用公开类方法" userInfo:nil];
     }
-    [self buildUI];
 }
 
 - (void)buildUI{
@@ -283,11 +300,8 @@ static XYTakePhotoController *_instance;
             // 创建自定义相机
             [self customCamera];
             [self customUI];
-            
         }
-        
     }];
-    
 }
 
 - (void)customCamera{
@@ -337,12 +351,9 @@ static XYTakePhotoController *_instance;
 }
 
 - (void)customUI{
-    FFIDCardBackView *idcardBackView = [[FFIDCardBackView alloc] initWithFrame:self.view.bounds];
-    if (self.tipTitle == nil) {
-        self.tipTitle = @"请将证件置于白色框内";
-    }
+    XYIDCardBackView *idcardBackView = [[XYIDCardBackView alloc] initWithFrame:self.view.bounds];
     idcardBackView.showGuoHuiImage = (self.mode == XYTakePhotoModeSingleBack);
-    [idcardBackView updateWithBackTitle:self.tipTitle];
+    [idcardBackView updateWithBackTitle:@"请将证件置于白色框内"];
     self.idcardBackView = idcardBackView;
     [self.view addSubview:idcardBackView];
     
@@ -373,9 +384,6 @@ static XYTakePhotoController *_instance;
     
     //闪光灯选项
     UIView *flashItemsView = [[UIView alloc] init];
-//    flashItemsView.size = CGSizeMake(WidthFromPx(42), HeightFromPx(42));
-//    flashItemsView.x = WidthFromPx(5);
-//    flashItemsView.y = 37;
     flashItemsView.frame = CGRectMake(5, 37, 45, 45);
     [self.view addSubview:flashItemsView];
     flashItemsView.layer.cornerRadius = flashItemsView.frame.size.width/2;
@@ -440,7 +448,6 @@ static XYTakePhotoController *_instance;
         CGRect frame = self.flashItemsView.frame;
         frame.size.height = self.flashViewWidth;
         self.flashItemsView.frame = frame;
-//        self.flashItemsView.height = _flashViewWidth;
     }];
 }
 - (void)oneFlashSelected:(UIButton *)button{
@@ -621,9 +628,8 @@ static XYTakePhotoController *_instance;
         }
         NSData * imageData = [AVCaptureStillImageOutput jpegStillImageNSDataRepresentation:imageDataSampleBuffer];
         UIImage *image = [UIImage imageWithData:imageData];
-        UIImage *cut = image;
-//        UIImage *fix = [UIImage fixOrientation:image];
-//        UIImage *cut = [UIImage cutImage:fix imageView:[[UIImageView alloc] initWithFrame:CGRectMake(0, 0, fix.size.width, fix.size.height)]];
+        UIImage *fix = [self fixOrientation:image];
+        UIImage *cut = [self cutImage:fix imageView:[[UIImageView alloc] initWithFrame:CGRectMake(0, 0, fix.size.width, fix.size.height)]];
         
         if (self.mode == XYTakePhotoModeFrontRear) {
             
@@ -654,25 +660,127 @@ static XYTakePhotoController *_instance;
     }];
 }
 
-#pragma mark - publicMethods
-
-- (void)dealloc
-{
-    NSLog(@" ----------- %@ --------dealloc --------",self);
-}
 - (void)closeCarema{
     [self dismissViewControllerAnimated:YES completion:^{
         _instance = nil;
     }];
 }
 
-- (BOOL)shouldAutorotate {
-    return NO;
+#pragma mark - 图片处理
+// 图片旋转
+- (UIImage *)fixOrientation:(UIImage *)aImage
+{
+    
+    // No-op if the orientation is already correct
+    if (aImage.imageOrientation == UIImageOrientationUp)
+        return aImage;
+    
+    CGAffineTransform transform = CGAffineTransformIdentity;
+    
+    switch (aImage.imageOrientation) {
+        case UIImageOrientationDown:
+        case UIImageOrientationDownMirrored:
+            transform = CGAffineTransformTranslate(transform, aImage.size.width, aImage.size.height);
+            transform = CGAffineTransformRotate(transform, M_PI);
+            break;
+            
+        case UIImageOrientationLeft:
+        case UIImageOrientationLeftMirrored:
+            transform = CGAffineTransformTranslate(transform, aImage.size.width, 0);
+            transform = CGAffineTransformRotate(transform, M_PI_2);
+            break;
+            
+        case UIImageOrientationRight:
+        case UIImageOrientationRightMirrored:
+            transform = CGAffineTransformTranslate(transform, 0, aImage.size.height);
+            transform = CGAffineTransformRotate(transform, -M_PI_2);
+            break;
+        default:
+            break;
+    }
+    
+    switch (aImage.imageOrientation) {
+        case UIImageOrientationUpMirrored:
+        case UIImageOrientationDownMirrored:
+            transform = CGAffineTransformTranslate(transform, aImage.size.width, 0);
+            transform = CGAffineTransformScale(transform, -1, 1);
+            break;
+            
+        case UIImageOrientationLeftMirrored:
+        case UIImageOrientationRightMirrored:
+            transform = CGAffineTransformTranslate(transform, aImage.size.height, 0);
+            transform = CGAffineTransformScale(transform, -1, 1);
+            break;
+        default:
+            break;
+    }
+    
+    // Now we draw the underlying CGImage into a new context, applying the transform
+    // calculated above.
+    CGContextRef ctx = CGBitmapContextCreate(NULL, aImage.size.width, aImage.size.height,
+                                             CGImageGetBitsPerComponent(aImage.CGImage), 0,
+                                             CGImageGetColorSpace(aImage.CGImage),
+                                             CGImageGetBitmapInfo(aImage.CGImage));
+    CGContextConcatCTM(ctx, transform);
+    switch (aImage.imageOrientation) {
+        case UIImageOrientationLeft:
+        case UIImageOrientationLeftMirrored:
+        case UIImageOrientationRight:
+        case UIImageOrientationRightMirrored:
+            // Grr...
+            CGContextDrawImage(ctx, CGRectMake(0,0,aImage.size.height,aImage.size.width), aImage.CGImage);
+            break;
+            
+        default:
+            CGContextDrawImage(ctx, CGRectMake(0,0,aImage.size.width,aImage.size.height), aImage.CGImage);
+            break;
+    }
+    
+    // And now we just create a new UIImage from the drawing context
+    CGImageRef cgimg = CGBitmapContextCreateImage(ctx);
+    UIImage *img = [UIImage imageWithCGImage:cgimg];
+    CGContextRelease(ctx);
+    CGImageRelease(cgimg);
+    return img;
 }
 
-- (BOOL)prefersStatusBarHidden{
-    return YES;
+
+- (UIImage *)cutImage:(UIImage *)cutImage imageView:(UIImageView *)imageView{
+    //裁剪代码
+    CGFloat width01 = iPhone5or5cor5sorSE? 240: (iPhone6or6sor7? 270: 300);
+    CGFloat scale = MIN(cutImage.size.width / kScreen_Width, cutImage.size.height / kScreen_Height);
+    CGFloat clipWidht = width01 * scale;
+    CGFloat clipHeight = width01 * scale * 1.574;
+    CGRect cropFrame = CGRectMake((cutImage.size.width - clipWidht) * 0.5, (cutImage.size.height - clipHeight) * 0.5, clipWidht, clipHeight);
+    CGFloat orgX = cropFrame.origin.x * (cutImage.size.width / imageView.frame.size.width);
+    CGFloat orgY = cropFrame.origin.y * (cutImage.size.height / imageView.frame.size.height);
+    CGFloat width = cropFrame.size.width * (cutImage.size.width / imageView.frame.size.width);
+    CGFloat height = cropFrame.size.height * (cutImage.size.height / imageView.frame.size.height);
+    CGRect cropRect = CGRectMake(orgX, orgY, width, height);
+    CGImageRef imgRef = CGImageCreateWithImageInRect(cutImage.CGImage, cropRect);
+    CGFloat deviceScale = [UIScreen mainScreen].scale;
+    UIGraphicsBeginImageContextWithOptions(cropFrame.size, 0, deviceScale);
+    CGContextRef context = UIGraphicsGetCurrentContext();
+    CGContextTranslateCTM(context, 0, cropFrame.size.height);
+    CGContextScaleCTM(context, 1, -1);
+    CGContextDrawImage(context, CGRectMake(0, 0, cropFrame.size.width, cropFrame.size.height), imgRef);
+    UIImage *newImg = UIGraphicsGetImageFromCurrentImageContext();
+    CGImageRelease(imgRef);
+    UIGraphicsEndImageContext();
+    //左转90度
+    UIImage *rotationImage = [UIImage imageWithCGImage:newImg.CGImage scale:2.0 orientation:UIImageOrientationLeft];
+    return rotationImage;
 }
+
+
+#pragma mark - dealloc
+
+- (void)dealloc
+{
+    NSLog(@" ----------- %@ --------dealloc --------",self);
+}
+
+
 
 
 @end

@@ -18,9 +18,6 @@ typedef NS_ENUM(NSUInteger, XYTakePhotoMode) {
 
 @interface XYTakePhotoController : UIViewController
 
-@property (nonatomic, copy) NSString *tipTitle;
-
-
 /// 推出拍照控制器去拍摄图片
 /// @param fromVC 从哪个控制器推出
 /// @param mode 拍照模式

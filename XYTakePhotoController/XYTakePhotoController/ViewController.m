@@ -12,6 +12,8 @@
 @interface ViewController ()
 @property (weak, nonatomic) IBOutlet UIImageView *imageView;
 
+@property (weak, nonatomic) IBOutlet UILabel *statusLabel;
+
 @end
 
 @implementation ViewController
@@ -29,6 +31,7 @@
         
         if (errorMsg) {
             // 处理错误信息
+            self.statusLabel.text = errorMsg;
             return ;
         }
         
@@ -49,6 +52,7 @@
         
         if (errorMsg) {
             // 处理错误信息
+            self.statusLabel.text = errorMsg;
             return ;
         }
         
@@ -70,6 +74,7 @@
         
         if (errorMsg) {
             // 处理错误信息
+            self.statusLabel.text = errorMsg;
             return ;
         }
         
@@ -89,6 +94,7 @@
 
         if (errorMsg) {
             // 处理错误信息
+            self.statusLabel.text = errorMsg;
             return ;
         }
 
