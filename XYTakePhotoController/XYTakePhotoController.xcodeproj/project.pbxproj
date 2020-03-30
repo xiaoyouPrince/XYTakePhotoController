@@ -7,6 +7,7 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		B459465A2431E03E0009BBEC /* idCardGuoHui@3x.png in Resources */ = {isa = PBXBuildFile; fileRef = B45946592431E03E0009BBEC /* idCardGuoHui@3x.png */; };
 		B483E1002430A27300221FF1 /* AppDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = B483E0FF2430A27300221FF1 /* AppDelegate.m */; };
 		B483E1032430A27300221FF1 /* SceneDelegate.m in Sources */ = {isa = PBXBuildFile; fileRef = B483E1022430A27300221FF1 /* SceneDelegate.m */; };
 		B483E1062430A27300221FF1 /* ViewController.m in Sources */ = {isa = PBXBuildFile; fileRef = B483E1052430A27300221FF1 /* ViewController.m */; };
@@ -26,6 +27,7 @@
 /* End PBXBuildFile section */
 
 /* Begin PBXFileReference section */
+		B45946592431E03E0009BBEC /* idCardGuoHui@3x.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "idCardGuoHui@3x.png"; sourceTree = "<group>"; };
 		B483E0FB2430A27300221FF1 /* XYTakePhotoController.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = XYTakePhotoController.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		B483E0FE2430A27300221FF1 /* AppDelegate.h */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.h; path = AppDelegate.h; sourceTree = "<group>"; };
 		B483E0FF2430A27300221FF1 /* AppDelegate.m */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.c.objc; path = AppDelegate.m; sourceTree = "<group>"; };
@@ -109,6 +111,7 @@
 		B483E11B2430E4D100221FF1 /* cameraIcon */ = {
 			isa = PBXGroup;
 			children = (
+				B45946592431E03E0009BBEC /* idCardGuoHui@3x.png */,
 				B483E11C2430E4D100221FF1 /* photo_flash_auto.png */,
 				B483E11D2430E4D100221FF1 /* photoClose@2x.png */,
 				B483E11E2430E4D100221FF1 /* gjjNew_changeCamera@2x.png */,
@@ -183,6 +186,7 @@
 				B483E1272430E4D100221FF1 /* photograph_Select@3x.png in Resources */,
 				B483E10B2430A27400221FF1 /* Assets.xcassets in Resources */,
 				B483E1242430E4D100221FF1 /* photo_flash_auto.png in Resources */,
+				B459465A2431E03E0009BBEC /* idCardGuoHui@3x.png in Resources */,
 				B483E12B2430E4D100221FF1 /* photo_flash_allLight.png in Resources */,
 				B483E1292430E4D100221FF1 /* photo_flash_on.png in Resources */,
 				B483E1262430E4D100221FF1 /* gjjNew_changeCamera@2x.png in Resources */,

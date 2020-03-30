@@ -123,6 +123,8 @@ static NSString *NoCameraAccessAlertMessage = @"To turn on camera access, choose
 @end
 
 @interface XYTakePhotoController ()<AVCaptureMetadataOutputObjectsDelegate>
+/** mode */
+@property (nonatomic, assign)       XYTakePhotoMode mode;
 /** imagesArray */
 @property (nonatomic, strong)       NSMutableArray <UIImage *>* imageArray;
 /** callBackHandler */
@@ -164,6 +166,7 @@ static NSString *NoCameraAccessAlertMessage = @"To turn on camera access, choose
 
 @end
 
+static XYTakePhotoController *_instance;
 @implementation XYTakePhotoController
 
 #pragma mark - private methods
@@ -229,27 +232,41 @@ static NSString *NoCameraAccessAlertMessage = @"To turn on camera access, choose
     }
 }
 
+#pragma mark - private methods
+- (UIModalPresentationStyle)modalPresentationStyle
+{
+    return UIModalPresentationFullScreen;
+}
++ (void)presentFromVC:(UIViewController *)fromVC mode:(XYTakePhotoMode)mode resultHandler:(void (^)(NSArray<UIImage *> * _Nonnull, NSString * _Nonnull))reslutHandler
+{
+    _instance = [XYTakePhotoController new];
+    if (!fromVC) {
+        fromVC = [[UIApplication sharedApplication].keyWindow rootViewController];
+    }
+    _instance.mode = mode;
+    _instance.callBackHandler = reslutHandler;
+    [fromVC presentViewController:_instance animated:YES completion:nil];
+    
+}
+
 #pragma mark - LazyLoad properties
+- (NSMutableArray<UIImage *> *)imageArray
+{
+    if (!_imageArray) {
+        _imageArray = @[].mutableCopy;
+    }
+    return _imageArray;
+}
 
 #pragma mark - life circle
 
 - (void)viewDidLoad {
     [super viewDidLoad];
+    if (self.navigationController) {
+        @throw [NSException exceptionWithName:@"用法错误" reason:@"此类不支持导航控制器推出,请使用公开类方法" userInfo:nil];
+    }
     [self buildUI];
 }
-
-- (void)viewWillAppear:(BOOL)animated
-{
-    [super viewWillAppear:animated];
-    [self.navigationController setNavigationBarHidden:YES animated:NO];
-}
-
-- (void)viewWillDisappear:(BOOL)animated
-{
-    [super viewWillDisappear:animated];
-    [self.navigationController setNavigationBarHidden:YES animated:NO];
-}
-
 
 - (void)buildUI{
     
@@ -324,7 +341,7 @@ static NSString *NoCameraAccessAlertMessage = @"To turn on camera access, choose
     if (self.tipTitle == nil) {
         self.tipTitle = @"请将证件置于白色框内";
     }
-    idcardBackView.showGuoHuiImage = !self.isFront;
+    idcardBackView.showGuoHuiImage = (self.mode == XYTakePhotoModeSingleBack);
     [idcardBackView updateWithBackTitle:self.tipTitle];
     self.idcardBackView = idcardBackView;
     [self.view addSubview:idcardBackView];
@@ -367,9 +384,6 @@ static NSString *NoCameraAccessAlertMessage = @"To turn on camera access, choose
     flashItemsView.clipsToBounds = YES;
     
     UIButton *flashButton = [UIButton buttonWithType:UIButtonTypeCustom];
-//    flashButton.size = CGSizeMake(WidthFromPx(34), HeightFromPx(34));
-//    flashButton.x = (flashItemsView.width - flashButton.width)/2;
-//    flashButton.y = flashButton.x;
     CGFloat flashButtonWH = 34;
     CGFloat flashButtonX = (flashItemsView.bounds.size.width - flashButtonWH)/2;
     flashButton.frame = CGRectMake(flashButtonX, flashButtonX, 34, 34);
@@ -434,7 +448,6 @@ static NSString *NoCameraAccessAlertMessage = @"To turn on camera access, choose
         CGRect frame = self.flashItemsView.frame;
         frame.size.height = self.flashItemsView.bounds.size.width;
         self.flashItemsView.frame = frame;
-//        self.flashItemsView.height = self.flashItemsView.width;
     }];
     if (button.selected) {
         return;
@@ -612,7 +625,7 @@ static NSString *NoCameraAccessAlertMessage = @"To turn on camera access, choose
 //        UIImage *fix = [UIImage fixOrientation:image];
 //        UIImage *cut = [UIImage cutImage:fix imageView:[[UIImageView alloc] initWithFrame:CGRectMake(0, 0, fix.size.width, fix.size.height)]];
         
-        if (self.isModeFrontRear) {
+        if (self.mode == XYTakePhotoModeFrontRear) {
             
             // 转换页面，重新开启
             [self.imageArray addObject:cut];
@@ -622,8 +635,8 @@ static NSString *NoCameraAccessAlertMessage = @"To turn on camera access, choose
             
             
             if (self.imageArray.count == 2) { // 两张图之后
-                if (self.TwoBlock) {
-                    self.TwoBlock(self.imageArray);
+                if (self.callBackHandler) {
+                    self.callBackHandler(self.imageArray, nil);
                 }
                 
                 [self closeCarema];
@@ -631,8 +644,9 @@ static NSString *NoCameraAccessAlertMessage = @"To turn on camera access, choose
             
         }else
         {
-            if (self.takePhoteSuccessBlock) {
-                self.takePhoteSuccessBlock(cut);
+            [self.imageArray addObject:cut];
+            if (self.callBackHandler) {
+                self.callBackHandler(self.imageArray, nil);
             }
             
             [self closeCarema];
@@ -640,49 +654,16 @@ static NSString *NoCameraAccessAlertMessage = @"To turn on camera access, choose
     }];
 }
 
-#pragma - 保存至相册
-- (void)saveImageToPhotoAlbum:(UIImage*)savedImage
-{
-    UIImageWriteToSavedPhotosAlbum(savedImage, self, @selector(image:didFinishSavingWithError:contextInfo:), NULL);
-}
-// 指定回调方法
-- (void)image: (UIImage *) image didFinishSavingWithError: (NSError *) error contextInfo: (void *) contextInfo
-{
-    NSString *msg = nil ;
-    if(error != NULL){
-        msg = @"保存图片失败" ;
-    }else{
-        msg = @"保存图片成功" ;
-    }
-    UIAlertView *alert = [[UIAlertView alloc] initWithTitle:@"保存图片结果提示"
-                                                    message:msg
-                                                   delegate:self
-                                          cancelButtonTitle:@"确定"
-                                          otherButtonTitles:nil];
-    [alert show];
-}
-
-
-#pragma mark - privateMethods
-
-
 #pragma mark - publicMethods
 
 - (void)dealloc
 {
-    // 移除通知
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
-    
     NSLog(@" ----------- %@ --------dealloc --------",self);
-    
 }
 - (void)closeCarema{
-    if (self.navigationController) {
-        [self.navigationController popViewControllerAnimated:YES];
-    }else
-    {
-        [self dismissViewControllerAnimated:YES completion:nil];
-    }
+    [self dismissViewControllerAnimated:YES completion:^{
+        _instance = nil;
+    }];
 }
 
 - (BOOL)shouldAutorotate {
